@@ -50,6 +50,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .permitAll()
         .antMatchers("/graphiql")
         .permitAll()
+        .antMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
+        .permitAll()
         .antMatchers("/graphql")
         .permitAll()
         .antMatchers(HttpMethod.GET, "/articles/feed")
