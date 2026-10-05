@@ -2,11 +2,9 @@ import axios from "axios";
 
 import { SERVER_BASE_URL } from "../utils/constant";
 import { PingResult, PlatformInfoResponse } from "../types/platformType";
-import { USE_PLATFORM_MOCK, getMockPlatformInfo } from "./platformMock";
 
 const PlatformAPI = {
   getInfo: async (): Promise<PlatformInfoResponse> => {
-    if (USE_PLATFORM_MOCK) return getMockPlatformInfo();
     const response = await axios.get<PlatformInfoResponse>(
       `${SERVER_BASE_URL}/platform/info`
     );
