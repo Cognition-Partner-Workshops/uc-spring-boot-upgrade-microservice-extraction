@@ -32,6 +32,31 @@ And the code is organized as this:
 3. `application` is the high-level services for querying the data transfer objects
 4. `infrastructure`  contains all the implementation classes as the technique details
 
+# Services
+
+The codebase is split along its bounded contexts into two Spring Boot services:
+
+| Service | Directory | Port | Database | Owns |
+|---|---|---|---|---|
+| monolith | `/` | 8080 | `dev.db` | Articles (CRUD, feed, favorites, tags), Users/Profiles (registration, JWT auth, following), public REST + GraphQL API |
+| comments-service | `comments-service/` | 8081 | `comments.db` | Comments (CRUD linked to an `articleId`) |
+
+The monolith stays the public façade: `/articles/{slug}/comments` and the GraphQL comment fields are
+unchanged for clients. Internally `io.spring.infrastructure.comment.CommentServiceClient` talks to the
+comments-service over HTTP (`comments.service.url`, env `COMMENTS_SERVICE_URL`), and
+`CommentQueryService` re-attaches author profiles / `following` from the Users context. Authentication,
+slug → article resolution and comment authorization (article owner or comment owner may delete) remain in
+the monolith; the comments-service stores only `author_id` and never calls back into the monolith. If the
+comments-service is unreachable the monolith answers `503` with `{"message": ...}`.
+
+comments-service REST API (internal, keyed by article id):
+
+    POST   /articles/{articleId}/comments            {"comment": {"body": "...", "authorId": "..."}}
+    GET    /articles/{articleId}/comments            ?direction=NEXT|PREV&cursor=<epoch-millis>&limit=20
+    GET    /articles/{articleId}/comments/{id}
+    DELETE /articles/{articleId}/comments/{id}
+    GET    /actuator/health
+
 # Security
 
 Integration with Spring Security and add other filter for jwt token process.
@@ -97,10 +122,17 @@ The frontend will run on http://localhost:3000 and connect to the backend on por
 
 # Try it out with [Docker](https://www.docker.com/)
 
-You'll need Docker installed.
-	
-    ./gradlew bootBuildImage --imageName spring-boot-realworld-example-app
-    docker run -p 8081:8080 spring-boot-realworld-example-app
+You'll need Docker installed. `docker-compose.yml` builds and runs both services, each with its own
+SQLite volume; the monolith waits for the comments-service health check.
+
+    docker compose up --build
+    # monolith:         http://localhost:8080
+    # comments-service: http://localhost:8081
+
+To run the two services without Docker start them in separate terminals:
+
+    (cd comments-service && ./gradlew bootRun)   # listens on 8081
+    ./gradlew bootRun                            # listens on 8080, COMMENTS_SERVICE_URL defaults to http://localhost:8081
 
 # Try it out with a RealWorld frontend
 
@@ -110,7 +142,16 @@ The entry point address of the backend API is at http://localhost:8080, **not** 
 
 The repository contains a lot of test cases to cover both api test and repository test.
 
-    ./gradlew test
+    ./gradlew test                                  # monolith (comments-service calls are mocked with MockRestServiceServer)
+    (cd comments-service && ./gradlew test)         # comments-service
+
+`integration-tests/` boots the full `docker-compose.yml` stack with Testcontainers and verifies the
+monolith ↔ comments-service communication end to end (create / list / delete / authorization /
+GraphQL). It needs Docker (the Docker API version used by Testcontainers defaults to 1.41, override with
+`DOCKER_API_VERSION` if your daemon is older); alternatively point it at an already running stack:
+
+    (cd integration-tests && ./gradlew test)
+    MONOLITH_URL=http://localhost:8080 COMMENTS_SERVICE_URL=http://localhost:8081 ./gradlew test   # from integration-tests/
 
 # Code format
 

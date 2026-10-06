@@ -3,7 +3,8 @@ package io.spring.core.comment;
 import java.util.Optional;
 
 public interface CommentRepository {
-  void save(Comment comment);
+  /** Persists the comment and returns the stored representation (id and timestamps). */
+  Comment save(Comment comment);
 
   Optional<Comment> findById(String articleId, String id);
 
