@@ -44,10 +44,15 @@ public class CommentsApi {
       @Valid @RequestBody NewCommentParam newCommentParam) {
     Article article =
         articleRepository.findBySlug(slug).orElseThrow(ResourceNotFoundException::new);
-    Comment comment = new Comment(newCommentParam.getBody(), user.getId(), article.getId());
-    commentRepository.save(comment);
+    Comment comment =
+        commentRepository.save(
+            new Comment(newCommentParam.getBody(), user.getId(), article.getId()));
     return ResponseEntity.status(201)
-        .body(commentResponse(commentQueryService.findById(comment.getId(), user).get()));
+        .body(
+            commentResponse(
+                commentQueryService
+                    .findById(article.getId(), comment.getId(), user)
+                    .orElseThrow(ResourceNotFoundException::new)));
   }
 
   @GetMapping

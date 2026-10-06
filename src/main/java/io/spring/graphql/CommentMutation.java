@@ -34,11 +34,10 @@ public class CommentMutation {
     User user = SecurityUtil.getCurrentUser().orElseThrow(AuthenticationException::new);
     Article article =
         articleRepository.findBySlug(slug).orElseThrow(ResourceNotFoundException::new);
-    Comment comment = new Comment(body, user.getId(), article.getId());
-    commentRepository.save(comment);
+    Comment comment = commentRepository.save(new Comment(body, user.getId(), article.getId()));
     CommentData commentData =
         commentQueryService
-            .findById(comment.getId(), user)
+            .findById(article.getId(), comment.getId(), user)
             .orElseThrow(ResourceNotFoundException::new);
     return DataFetcherResult.<CommentPayload>newResult()
         .localContext(commentData)

@@ -5,6 +5,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
@@ -18,6 +19,7 @@ import io.spring.core.article.ArticleRepository;
 import io.spring.core.comment.Comment;
 import io.spring.core.comment.CommentRepository;
 import io.spring.core.user.User;
+import io.spring.infrastructure.comment.CommentServiceException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,7 +79,9 @@ public class CommentsApiTest extends TestWithCurrentUser {
           }
         };
 
-    when(commentQueryService.findById(anyString(), eq(user))).thenReturn(Optional.of(commentData));
+    when(commentRepository.save(any(Comment.class))).thenReturn(comment);
+    when(commentQueryService.findById(eq(article.getId()), eq(comment.getId()), eq(user)))
+        .thenReturn(Optional.of(commentData));
 
     given()
         .contentType("application/json")
@@ -87,7 +91,50 @@ public class CommentsApiTest extends TestWithCurrentUser {
         .post("/articles/{slug}/comments", article.getSlug())
         .then()
         .statusCode(201)
-        .body("comment.body", equalTo(commentData.getBody()));
+        .body("comment.body", equalTo(commentData.getBody()))
+        .body("comment.author.username", equalTo(user.getUsername()));
+  }
+
+  @Test
+  public void should_get_503_when_comments_service_is_unavailable() throws Exception {
+    Map<String, Object> param =
+        new HashMap<String, Object>() {
+          {
+            put(
+                "comment",
+                new HashMap<String, Object>() {
+                  {
+                    put("body", "comment content");
+                  }
+                });
+          }
+        };
+
+    when(commentRepository.save(any(Comment.class)))
+        .thenThrow(new CommentServiceException("Comments service is unavailable", null));
+
+    given()
+        .contentType("application/json")
+        .header("Authorization", "Token " + token)
+        .body(param)
+        .when()
+        .post("/articles/{slug}/comments", article.getSlug())
+        .then()
+        .statusCode(503)
+        .body("message", equalTo("Comments service is unavailable"));
+  }
+
+  @Test
+  public void should_get_404_when_deleting_unknown_comment() throws Exception {
+    when(commentRepository.findById(eq(article.getId()), eq("missing")))
+        .thenReturn(Optional.empty());
+
+    given()
+        .header("Authorization", "Token " + token)
+        .when()
+        .delete("/articles/{slug}/comments/{id}", article.getSlug(), "missing")
+        .then()
+        .statusCode(404);
   }
 
   @Test
@@ -139,6 +186,8 @@ public class CommentsApiTest extends TestWithCurrentUser {
         .delete("/articles/{slug}/comments/{id}", article.getSlug(), comment.getId())
         .then()
         .statusCode(204);
+
+    verify(commentRepository).remove(comment);
   }
 
   @Test

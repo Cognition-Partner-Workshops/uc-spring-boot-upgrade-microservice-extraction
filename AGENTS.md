@@ -4,6 +4,13 @@
 
 Spring Boot 2.6.3 / Java 11 monolith implementing the RealWorld blogging platform (Conduit). 4 domain contexts: articles/tags, comments, favorites, users/profiles. REST and GraphQL (DGS) APIs, MyBatis persistence with SQLite, Flyway migrations, 27 test files with an 80% JaCoCo coverage gate.
 
+## Current Layout
+
+- `/` — monolith (Articles, Users/Profiles, public REST + GraphQL). Comments persistence is delegated over HTTP via `io.spring.infrastructure.comment.CommentServiceClient` behind the `CommentRepository` port (`HttpCommentRepository`). The monolith's `comments` table was dropped in `V3__drop_comments_table.sql`.
+- `comments-service/` — extracted Comments service (own `build.gradle`, `comments.db`, Flyway `V1__`/`V2__`, Dockerfile, port 8081). Stores `author_id` only; no auth, no calls back to the monolith.
+- `integration-tests/` — Testcontainers + RestAssured suite that runs `docker-compose.yml` and verifies cross-service behaviour. Requires Docker.
+- `docker-compose.yml` — runs both services with separate volumes and health checks.
+
 ## Microservice Extraction Standards
 
 ### Build Configuration
