@@ -64,7 +64,7 @@ The application includes seed data with sample users, articles, tags, comments, 
 
 ## Backend (Spring Boot)
 
-You'll need Java 11 installed.
+You'll need Java 17 installed (Spring Boot 3.2.x, Gradle 8.7 wrapper). See [MIGRATION.md](MIGRATION.md) for the Java 11 / Spring Boot 2.6 → Java 17 / Spring Boot 3.2 upgrade notes.
 
     ./gradlew bootRun
 
