@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.spring.infrastructure.mybatis.readservice.ArticleStatsReadService">
+    <select id="findBySlug" resultMap="articleStats">
+        select
+          A.slug,
+          A.view_count viewCount,
+          A.created_at articleCreatedAt,
+          (select count(1) from article_favorites AF where AF.article_id = A.id) favoritesCount,
+          (select count(1) from comments C where C.article_id = A.id) commentsCount
+        from articles A
+        where A.slug = #{slug}
+    </select>
+    <resultMap id="articleStats" type="io.spring.application.data.ArticleStatsData">
+        <result column="slug" property="slug"/>
+        <result column="viewCount" property="viewCount"/>
+        <result column="favoritesCount" property="favoritesCount"/>
+        <result column="commentsCount" property="commentsCount"/>
+        <result column="articleCreatedAt" property="createdAt"/>
+    </resultMap>
+    <select id="findTrending" resultMap="trendingArticle">
+        select A.slug, A.title, count(AF.user_id) recentFavoritesCount
+        from article_favorites AF
+        join articles A on A.id = AF.article_id
+        where AF.created_at >= #{since} and AF.created_at &lt;= #{until}
+        group by A.id, A.slug, A.title
+        order by recentFavoritesCount desc, A.slug asc
+        limit #{limit}
+    </select>
+    <resultMap id="trendingArticle" type="io.spring.application.data.TrendingArticleData">
+        <result column="slug" property="slug"/>
+        <result column="title" property="title"/>
+        <result column="recentFavoritesCount" property="recentFavoritesCount"/>
+    </resultMap>
+</mapper>
