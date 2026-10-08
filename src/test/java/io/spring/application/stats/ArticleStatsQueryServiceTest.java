@@ -108,6 +108,7 @@ public class ArticleStatsQueryServiceTest extends DbTestBase {
     Article a = newArticle("Trending A", new DateTime());
     Article b = newArticle("Trending B", new DateTime());
     Article c = newArticle("Trending C", new DateTime());
+    Article d = newArticle("Trending D", new DateTime());
 
     User u1 = new User("t1@test.com", "t1", "123", "", "");
     User u2 = new User("t2@test.com", "t2", "123", "", "");
@@ -129,6 +130,10 @@ public class ArticleStatsQueryServiceTest extends DbTestBase {
         new ArticleFavorite(c.getId(), u2.getId(), new DateTime().minusDays(8)));
     articleFavoriteRepository.save(
         new ArticleFavorite(c.getId(), u4.getId(), new DateTime().minusDays(8)));
+    articleFavoriteRepository.save(
+        new ArticleFavorite(d.getId(), u1.getId(), new DateTime().plusDays(1)));
+    articleFavoriteRepository.save(
+        new ArticleFavorite(d.getId(), u2.getId(), new DateTime().plusDays(1)));
 
     List<TrendingArticleData> trending = articleStatsQueryService.trending();
     Assertions.assertEquals(2, trending.size());

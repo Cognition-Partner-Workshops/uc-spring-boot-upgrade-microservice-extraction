@@ -11,5 +11,6 @@ import org.joda.time.DateTime;
 public interface ArticleStatsReadService {
   ArticleStatsData findBySlug(@Param("slug") String slug);
 
-  List<TrendingArticleData> findTrending(@Param("since") DateTime since, @Param("limit") int limit);
+  List<TrendingArticleData> findTrending(
+      @Param("since") DateTime since, @Param("until") DateTime until, @Param("limit") int limit);
 }

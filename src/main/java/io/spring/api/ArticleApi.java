@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,12 +35,14 @@ public class ArticleApi {
 
   @GetMapping
   public ResponseEntity<?> article(
-      @PathVariable("slug") String slug, @AuthenticationPrincipal User user) {
+      @PathVariable("slug") String slug, @AuthenticationPrincipal User user, HttpMethod method) {
     return articleQueryService
         .findBySlug(slug, user)
         .map(
             articleData -> {
-              articleRepository.incrementViewCount(articleData.getId());
+              if (method == HttpMethod.GET) {
+                articleRepository.incrementViewCount(articleData.getId());
+              }
               return ResponseEntity.ok(articleResponse(articleData));
             })
         .orElseThrow(ResourceNotFoundException::new);

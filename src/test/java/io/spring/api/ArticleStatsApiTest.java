@@ -1,6 +1,7 @@
 package io.spring.api;
 
 import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -51,7 +52,7 @@ public class ArticleStatsApiTest extends TestWithCurrentUser {
         .body("stats.favoritesCount", equalTo(2))
         .body("stats.commentsCount", equalTo(1))
         .body("stats.daysSincePublished", equalTo(7))
-        .body("stats.createdAt", org.hamcrest.Matchers.nullValue());
+        .body("stats.createdAt", nullValue());
   }
 
   @Test

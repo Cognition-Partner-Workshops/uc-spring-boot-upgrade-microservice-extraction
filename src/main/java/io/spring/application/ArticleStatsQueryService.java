@@ -29,7 +29,8 @@ public class ArticleStatsQueryService {
   }
 
   public List<TrendingArticleData> trending() {
+    DateTime now = new DateTime();
     return articleStatsReadService.findTrending(
-        new DateTime().minusDays(TRENDING_WINDOW_DAYS), TRENDING_LIMIT);
+        now.minusDays(TRENDING_WINDOW_DAYS), now, TRENDING_LIMIT);
   }
 }
