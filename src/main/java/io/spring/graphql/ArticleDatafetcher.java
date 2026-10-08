@@ -17,6 +17,7 @@ import io.spring.application.CursorPager.Direction;
 import io.spring.application.DateTimeCursor;
 import io.spring.application.data.ArticleData;
 import io.spring.application.data.CommentData;
+import io.spring.core.article.ArticleRepository;
 import io.spring.core.user.User;
 import io.spring.core.user.UserRepository;
 import io.spring.graphql.DgsConstants.ARTICLEPAYLOAD;
@@ -38,6 +39,7 @@ public class ArticleDatafetcher {
 
   private ArticleQueryService articleQueryService;
   private UserRepository userRepository;
+  private ArticleRepository articleRepository;
 
   @DgsQuery(field = QUERY.Feed)
   public DataFetcherResult<ArticlesConnection> getFeed(
@@ -344,6 +346,7 @@ public class ArticleDatafetcher {
     User current = SecurityUtil.getCurrentUser().orElse(null);
     ArticleData articleData =
         articleQueryService.findBySlug(slug, current).orElseThrow(ResourceNotFoundException::new);
+    articleRepository.incrementViewCount(articleData.getId());
     Article articleResult = buildArticleResult(articleData);
     return DataFetcherResult.<Article>newResult()
         .localContext(

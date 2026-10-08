@@ -29,6 +29,9 @@
           </set>
         where id = #{article.id}
     </update>
+    <update id="incrementViewCount">
+        update articles set view_count = view_count + 1 where id = #{id}
+    </update>
     <delete id="delete">
         delete from articles where id = #{id}
     </delete>

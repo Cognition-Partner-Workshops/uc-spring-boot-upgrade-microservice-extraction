@@ -11,4 +11,6 @@ public interface ArticleRepository {
   Optional<Article> findBySlug(String slug);
 
   void remove(Article article);
+
+  void incrementViewCount(String articleId);
 }
