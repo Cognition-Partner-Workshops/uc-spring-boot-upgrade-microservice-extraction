@@ -1,14 +1,14 @@
 package io.spring.api;
 
 import com.fasterxml.jackson.annotation.JsonRootName;
-import io.spring.api.exception.NoAuthorizationException;
-import io.spring.api.exception.ResourceNotFoundException;
 import io.spring.application.CommentQueryService;
 import io.spring.application.data.CommentData;
 import io.spring.core.article.Article;
 import io.spring.core.article.ArticleRepository;
 import io.spring.core.comment.Comment;
 import io.spring.core.comment.CommentRepository;
+import io.spring.core.exception.NoAuthorizationException;
+import io.spring.core.exception.ResourceNotFoundException;
 import io.spring.core.service.AuthorizationService;
 import io.spring.core.user.User;
 import java.util.HashMap;
