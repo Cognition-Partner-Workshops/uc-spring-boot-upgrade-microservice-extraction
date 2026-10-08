@@ -54,4 +54,9 @@ public class MyBatisArticleRepository implements ArticleRepository {
   public void remove(Article article) {
     articleMapper.delete(article.getId());
   }
+
+  @Override
+  public void incrementViewCount(String articleId) {
+    articleMapper.incrementViewCount(articleId);
+  }
 }

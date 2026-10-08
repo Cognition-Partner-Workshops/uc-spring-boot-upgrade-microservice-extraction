@@ -81,6 +81,26 @@ public class ArticleApiTest extends TestWithCurrentUser {
   public void should_404_if_article_not_found() throws Exception {
     when(articleQueryService.findBySlug(anyString(), any())).thenReturn(Optional.empty());
     RestAssuredMockMvc.when().get("/articles/not-exists").then().statusCode(404);
+    verify(articleRepository, org.mockito.Mockito.never()).incrementViewCount(anyString());
+  }
+
+  @Test
+  public void should_increment_view_count_when_read_article() throws Exception {
+    String slug = "test-new-article";
+    Article article =
+        new Article(
+            "Test New Article",
+            "Desc",
+            "Body",
+            Arrays.asList("java", "spring", "jpg"),
+            user.getId());
+    ArticleData articleData = TestHelper.getArticleDataFromArticleAndUser(article, user);
+
+    when(articleQueryService.findBySlug(eq(slug), eq(null))).thenReturn(Optional.of(articleData));
+
+    RestAssuredMockMvc.when().get("/articles/{slug}", slug).then().statusCode(200);
+
+    verify(articleRepository).incrementViewCount(eq(articleData.getId()));
   }
 
   @Test

@@ -20,8 +20,13 @@ public class MyBatisArticleFavoriteRepositoryTest extends DbTestBase {
   public void should_save_and_fetch_articleFavorite_success() {
     ArticleFavorite articleFavorite = new ArticleFavorite("123", "456");
     articleFavoriteRepository.save(articleFavorite);
-    Assertions.assertNotNull(
-        articleFavoriteMapper.find(articleFavorite.getArticleId(), articleFavorite.getUserId()));
+    ArticleFavorite fetched =
+        articleFavoriteMapper.find(articleFavorite.getArticleId(), articleFavorite.getUserId());
+    Assertions.assertNotNull(fetched);
+    Assertions.assertNotNull(fetched.getCreatedAt());
+    Assertions.assertEquals(
+        articleFavorite.getCreatedAt().getMillis() / 1000,
+        fetched.getCreatedAt().getMillis() / 1000);
   }
 
   @Test
