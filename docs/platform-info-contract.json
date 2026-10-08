@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Cognition-Partner-Workshops/uc-spring-boot-upgrade-microservice-extraction/docs/platform-info-contract.json",
+  "title": "GET /platform/info response (Jira DN-13)",
+  "description": "Shared contract between the Spring Boot backend (producer) and the Next.js 'API Platform' page (consumer). Public endpoint, no JWT required, 200 application/json. The response body is the object described here with NO envelope key. Values are read live by the backend: runtime from System.getProperty/SpringBootVersion, dependencies from configuration (before -> after of the DN-13 upgrade), endpoints from RequestMappingHandlerMapping.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["runtime", "dependencies", "endpoints"],
+  "properties": {
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["java", "springBoot"],
+      "properties": {
+        "java": {
+          "type": "string",
+          "description": "System.getProperty(\"java.version\"), e.g. \"17.0.20.1\""
+        },
+        "springBoot": {
+          "type": "string",
+          "description": "org.springframework.boot.SpringBootVersion.getVersion(), e.g. \"3.3.13\""
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "description": "Before -> after table of what the DN-13 upgrade changed. One row per dependency/platform component. Order is presentation order.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "before", "after"],
+        "properties": {
+          "name": { "type": "string", "description": "Human-readable name, e.g. \"Spring Boot\"" },
+          "before": { "type": "string", "description": "Version (or API namespace) before the upgrade, e.g. \"2.6.3\" or \"javax.*\"" },
+          "after": { "type": "string", "description": "Version (or API namespace) after the upgrade, e.g. \"3.3.13\" or \"jakarta.*\"" }
+        }
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "description": "Inventory of REST endpoints served by the backend, derived from RequestMappingHandlerMapping#getHandlerMethods() and filtered to controllers in package io.spring.api. One entry per (method, path) pair; multi-method/multi-path mappings are expanded. Sorted by path, then method. Includes GET /platform/info itself.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["method", "path"],
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^/",
+            "description": "Absolute path pattern with a leading slash and Spring-style {variables}, e.g. \"/articles/{slug}/comments/{id}\""
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "runtime": { "java": "17.0.20.1", "springBoot": "3.3.13" },
+      "dependencies": [
+        { "name": "Java", "before": "11", "after": "17" },
+        { "name": "Spring Boot", "before": "2.6.3", "after": "3.3.13" },
+        { "name": "Spring Framework", "before": "5.3.15", "after": "6.1.21" },
+        { "name": "Spring Security", "before": "5.6.1", "after": "6.3.x" },
+        { "name": "Netflix DGS", "before": "4.9.21", "after": "8.x" },
+        { "name": "MyBatis Spring Boot Starter", "before": "2.2.2", "after": "3.0.x" },
+        { "name": "jjwt", "before": "0.11.2", "after": "0.12.x" },
+        { "name": "sqlite-jdbc", "before": "3.36.0.3", "after": "3.4x" },
+        { "name": "Flyway", "before": "8.0.5", "after": "10.x" },
+        { "name": "REST Assured (test)", "before": "4.5.1", "after": "5.x" },
+        { "name": "Servlet / Validation API", "before": "javax.*", "after": "jakarta.*" },
+        { "name": "Gradle wrapper", "before": "7.4", "after": "8.x" }
+      ],
+      "endpoints": [
+        { "method": "GET", "path": "/articles" },
+        { "method": "POST", "path": "/articles" },
+        { "method": "GET", "path": "/articles/feed" },
+        { "method": "DELETE", "path": "/articles/{slug}" },
+        { "method": "GET", "path": "/articles/{slug}" },
+        { "method": "PUT", "path": "/articles/{slug}" },
+        { "method": "GET", "path": "/articles/{slug}/comments" },
+        { "method": "POST", "path": "/articles/{slug}/comments" },
+        { "method": "DELETE", "path": "/articles/{slug}/comments/{id}" },
+        { "method": "DELETE", "path": "/articles/{slug}/favorite" },
+        { "method": "POST", "path": "/articles/{slug}/favorite" },
+        { "method": "GET", "path": "/platform/info" },
+        { "method": "GET", "path": "/profiles/{username}" },
+        { "method": "DELETE", "path": "/profiles/{username}/follow" },
+        { "method": "POST", "path": "/profiles/{username}/follow" },
+        { "method": "GET", "path": "/tags" },
+        { "method": "GET", "path": "/user" },
+        { "method": "PUT", "path": "/user" },
+        { "method": "POST", "path": "/users" },
+        { "method": "POST", "path": "/users/login" }
+      ]
+    }
+  ]
+}
