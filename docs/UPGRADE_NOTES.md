@@ -129,11 +129,14 @@ reports unless identified as plugins or build tools.
   | `antMatchers(...)` | `requestMatchers(...)` |
   | `.csrf().disable()` and `.and()` chaining | `.csrf(AbstractHttpConfigurer::disable)` in the lambda DSL |
   | `.cors()` with `.and()` chaining | `.cors(Customizer.withDefaults())` |
-  | No explicit error-dispatch rule | `dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()` |
+  | No explicit forward/error-dispatch rule | `dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()` |
 
-  The `ERROR` dispatcher permit is deliberately first: Security 6 authorizes
-  each dispatch, so an anonymous request forwarded to `/error` must retain its
-  original 404 or validation response rather than being converted to 401.
+  The `FORWARD` and `ERROR` dispatcher permits are deliberately first: Security
+  6 authorizes each dispatch. Allowing `ERROR` preserves an anonymous request's
+  original 404 or validation response when forwarded to `/error`. DGS 8.7.1's
+  `GraphiQLConfigurer` forwards `/graphiql` to `/graphiql/index.html`, so the
+  `FORWARD` dispatch is permitted and `/graphiql/**` is allowed. End-to-end
+  testing found that anonymous `GET /graphiql` returned 401 before this change.
 
 ### `ResponseEntityExceptionHandler` status parameter
 
@@ -300,6 +303,8 @@ The smoke requests returned:
 | Request | Result |
 | --- | --- |
 | `GET /tags` | 200 |
+| Anonymous `GET /graphiql` (following the forward) | 200, HTML |
+| Anonymous `GET /graphiql/index.html` | 200 |
 | Register user | 201 |
 | Login | 200 |
 | Authenticated `GET /user` | 200 |
