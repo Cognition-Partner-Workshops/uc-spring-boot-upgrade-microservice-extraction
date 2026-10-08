@@ -5,6 +5,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -75,12 +76,15 @@ public class ArticleApiTest extends TestWithCurrentUser {
         .body("article.slug", equalTo(slug))
         .body("article.body", equalTo(articleData.getBody()))
         .body("article.createdAt", equalTo(ISODateTimeFormat.dateTime().withZoneUTC().print(time)));
+
+    verify(articleRepository).incrementViewCount(eq(articleData.getId()));
   }
 
   @Test
   public void should_404_if_article_not_found() throws Exception {
     when(articleQueryService.findBySlug(anyString(), any())).thenReturn(Optional.empty());
     RestAssuredMockMvc.when().get("/articles/not-exists").then().statusCode(404);
+    verify(articleRepository, never()).incrementViewCount(anyString());
   }
 
   @Test

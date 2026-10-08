@@ -37,7 +37,11 @@ public class ArticleApi {
       @PathVariable("slug") String slug, @AuthenticationPrincipal User user) {
     return articleQueryService
         .findBySlug(slug, user)
-        .map(articleData -> ResponseEntity.ok(articleResponse(articleData)))
+        .map(
+            articleData -> {
+              articleRepository.incrementViewCount(articleData.getId());
+              return ResponseEntity.ok(articleResponse(articleData));
+            })
         .orElseThrow(ResourceNotFoundException::new);
   }
 

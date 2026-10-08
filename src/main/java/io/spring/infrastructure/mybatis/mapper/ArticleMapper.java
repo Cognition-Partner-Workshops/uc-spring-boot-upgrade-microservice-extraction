@@ -21,5 +21,7 @@ public interface ArticleMapper {
 
   void update(@Param("article") Article article);
 
+  void incrementViewCount(@Param("id") String id);
+
   void delete(@Param("id") String id);
 }

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="io.spring.infrastructure.mybatis.readservice.ArticleStatsReadService">
+    <select id="findBySlug" resultMap="articleStats">
+        select
+        A.slug articleSlug,
+        A.view_count articleViewCount,
+        A.created_at articleCreatedAt,
+        (select count(1) from article_favorites AF where AF.article_id = A.id) articleFavoritesCount,
+        (select count(1) from comments C where C.article_id = A.id) articleCommentsCount
+        from articles A
+        where A.slug = #{slug}
+    </select>
+    <select id="findMostFavoritedSince" resultMap="trendingArticle">
+        select
+        A.slug articleSlug,
+        A.title articleTitle,
+        A.description articleDescription,
+        count(AF.user_id) articleFavoritesCount
+        from article_favorites AF
+        join articles A on A.id = AF.article_id
+        where AF.created_at >= #{since}
+        group by A.id, A.slug, A.title, A.description
+        order by articleFavoritesCount desc, max(AF.created_at) desc
+        limit #{limit}
+    </select>
+
+    <resultMap id="articleStats" type="io.spring.application.data.ArticleStatsData">
+        <result column="articleSlug" property="slug"/>
+        <result column="articleViewCount" property="viewCount"/>
+        <result column="articleFavoritesCount" property="favoritesCount"/>
+        <result column="articleCommentsCount" property="commentsCount"/>
+        <result column="articleCreatedAt" property="createdAt"/>
+    </resultMap>
+    <resultMap id="trendingArticle" type="io.spring.application.data.TrendingArticleData">
+        <result column="articleSlug" property="slug"/>
+        <result column="articleTitle" property="title"/>
+        <result column="articleDescription" property="description"/>
+        <result column="articleFavoritesCount" property="favoritesCount"/>
+    </resultMap>
+</mapper>
