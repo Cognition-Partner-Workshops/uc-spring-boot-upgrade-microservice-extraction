@@ -4,6 +4,7 @@ import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
 import static io.spring.TestHelper.articleDataFixture;
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
@@ -14,12 +15,14 @@ import io.spring.application.Page;
 import io.spring.application.article.ArticleCommandService;
 import io.spring.application.data.ArticleDataList;
 import io.spring.core.article.ArticleRepository;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(ArticlesApi.class)
@@ -54,6 +57,20 @@ public class ListArticleApiTest extends TestWithCurrentUser {
   @Test
   public void should_get_feeds_401_without_login() throws Exception {
     RestAssuredMockMvc.when().get("/articles/feed").prettyPeek().then().statusCode(401);
+  }
+
+  @Test
+  public void should_get_feeds_401_without_login_for_path_variants() throws Exception {
+    RestAssuredMockMvc.when().get("/articles/feed/").then().statusCode(401);
+    RestAssuredMockMvc.when().get("/articles/feed/extra").then().statusCode(401);
+  }
+
+  @Test
+  public void should_reject_feed_in_controller_without_user() {
+    ArticlesApi articlesApi = new ArticlesApi(articleCommandService, articleQueryService);
+    Assertions.assertEquals(
+        HttpStatus.UNAUTHORIZED, articlesApi.getFeed(0, 20, null).getStatusCode());
+    verifyNoInteractions(articleQueryService);
   }
 
   @Test

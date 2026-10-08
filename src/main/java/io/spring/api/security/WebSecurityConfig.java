@@ -55,7 +55,7 @@ public class WebSecurityConfig {
                     .permitAll()
                     .requestMatchers("/graphql")
                     .permitAll()
-                    .requestMatchers(HttpMethod.GET, "/articles/feed")
+                    .requestMatchers(HttpMethod.GET, "/articles/feed", "/articles/feed/**")
                     .authenticated()
                     .requestMatchers(HttpMethod.POST, "/users", "/users/login")
                     .permitAll()
