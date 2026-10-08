@@ -1,0 +1,13 @@
+package io.spring.application.data;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class RuntimeInfo {
+  private String java;
+  private String springBoot;
+}
