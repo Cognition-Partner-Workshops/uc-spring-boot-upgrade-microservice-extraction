@@ -27,7 +27,7 @@ const LoginForm = () => {
     try {
       const { data, status } = await UserAPI.login(email, password);
       if (status !== 200) {
-        setErrors(data.errors);
+        setErrors(data?.errors || { "email or password": ["is invalid"] });
       }
 
       if (data?.user) {
