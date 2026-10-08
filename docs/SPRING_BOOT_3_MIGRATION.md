@@ -51,6 +51,11 @@ Any downstream code, including an extracted microservice, must use `jakarta.*` i
 - **Breaking:** `authorizeRequests()` / `antMatchers()` were removed. They are replaced by `authorizeHttpRequests()` / `requestMatchers()`.
 - The `.and()` chaining style is deprecated in Security 6.1+. The config now uses the lambda DSL (`csrf(AbstractHttpConfigurer::disable)`, `cors(Customizer.withDefaults())`, and so on).
 - The authorization rules themselves are unchanged: the same paths, methods and permit/authenticate decisions, in the same order.
+- **Breaking (behaviour):** in Security 6, authorization runs on every servlet dispatch type, including `FORWARD` and `ERROR`, not only the original `REQUEST`. Without a fix this produced two regressions:
+  - `GET /graphiql` returned 401, because DGS forwards it to `/graphiql/index.html`, which matched `anyRequest().authenticated()`.
+  - Any 404/500 from a public endpoint, such as `GET /articles/not-exists`, came back as 401, because the `/error` dispatch was rejected.
+
+  The config now has `dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll()`, which restores the Security 5 behaviour. Forwards and error dispatches are internal and can only follow a `REQUEST` dispatch that was already authorized. `WebSecurityDispatchTest` (a real-server `RANDOM_PORT` test, because MockMvc doesn't perform error dispatches) covers both cases, plus a 401 check on a protected endpoint.
 
 ## 4. Spring Framework 6 MVC
 
@@ -89,7 +94,7 @@ Any downstream code, including an extracted microservice, must use `jakarta.*` i
 
 ## Verification
 
-- `./gradlew clean build -x jacocoTestCoverageVerification` passes. **68/68 tests pass**, the same count as `main`.
+- `./gradlew clean build -x jacocoTestCoverageVerification` passes. **71/71 tests pass**: the 68 from `main` plus the 3 new tests in `WebSecurityDispatchTest`.
 - With `-Xlint:deprecation -Xlint:removal`, the compiler reports no deprecation warnings in project sources.
 - The packaged jar was smoke-tested on Java 17 with the seed database:
   - REST: `GET /tags` 200; `GET /user` and `GET /articles/feed` without a token return 401.
