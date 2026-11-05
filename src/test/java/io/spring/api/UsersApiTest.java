@@ -229,7 +229,6 @@ public class UsersApiTest {
         .body("user.bio", equalTo(""))
         .body("user.image", equalTo(defaultAvatar))
         .body("user.token", equalTo("123"));
-    ;
   }
 
   @Test
